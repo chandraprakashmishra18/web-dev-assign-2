@@ -1,6 +1,6 @@
 # Student Management REST API
 
-A simple RESTful API built using **Node.js** and **Express.js** to perform CRUD (Create, Read, Update, Delete) operations on student records. Student data is stored in-memory using a JavaScript array, making the project lightweight and suitable for learning REST API fundamentals.
+A production-ready Student Management REST API built using **Node.js** and **Express.js**. This API provides complete CRUD (Create, Read, Update, Delete) operations using an in-memory dataset, custom request logging middleware, robust request validation, 404 route handling, and centralized error handling.
 
 ---
 
@@ -15,296 +15,275 @@ A simple RESTful API built using **Node.js** and **Express.js** to perform CRUD 
 
 ---
 
-## Project Overview
-
-This project demonstrates the implementation of a REST API using Express.js. It includes CRUD operations, modular routing, custom middleware, and proper HTTP status codes without using any database.
-
----
-
-## Features
-
-- RESTful API design
-- Express.js server
-- CRUD operations (Create, Read, Update, Delete)
-- Modular routing with `express.Router()`
-- Custom logger middleware
-- JSON request handling and validation
-- Proper HTTP status codes (200, 201, 400, 404, 500)
-- In-memory data storage
-- Postman and Thunder Client compatible
-- Automated test script (`test_api.js`)
-
----
-
-## Tech Stack
-
-- **Runtime:** Node.js
-- **Framework:** Express.js
-
----
-
 ## Project Structure
 
 ```text
 web-dev-assign-2/
-├── app.js
-├── package.json
-├── package-lock.json
-├── test_api.js
+├── app.js                    # Main application entry point & Express server setup
+├── package.json              # Project configuration, scripts and dependencies
+├── package-lock.json         # Locked dependency versions
+├── test-api.js               # Automated integration verification test suite
+├── test_api.js               # Dual test runner entry point
 ├── routes/
-│   └── studentRoutes.js
+│   └── studentRoutes.js      # Express Router handling student CRUD endpoints
 ├── middleware/
-│   ├── logger.js
-│   └── errorHandler.js
+│   ├── logger.js             # Custom middleware logging HTTP method, URL, and timestamp
+│   └── errorHandler.js       # Centralized global error handling middleware
 ├── data/
-│   └── students.js
-└── README.md
+│   └── students.js           # Initial in-memory array of student records
+└── README.md                 # API documentation and usage guide
 ```
 
 ---
 
-## Installation
+## Getting Started
 
+### 1. Prerequisites
+- **Node.js**: v18+ (tested on v24.x)
+- **npm**: v9+
+
+### 2. Installation
 Clone the repository and install dependencies:
-
 ```bash
 git clone https://github.com/chandraprakashmishra18/web-dev-assign-2.git
 cd web-dev-assign-2
 npm install
 ```
 
----
+### 3. Running the Server
 
-## Running the Server
-
-Start the application with npm:
-
+#### Standard Start:
 ```bash
 npm start
 ```
+Starts the server on `http://localhost:3000`.
 
-or using Node directly:
-
+#### Development Start (Watch Mode):
 ```bash
-node app.js
+npm run dev
 ```
 
-The server will start on http://localhost:3000.
+#### Run Automated Test Suite:
+```bash
+npm test
+```
+*(or `node test-api.js` / `node test_api.js`)*
 
 ---
 
-## API Endpoints
+## API Endpoints & Specification
 
-### 1. Root Endpoint (API Info)
+Base URL: `http://localhost:3000`
 
-```http
-GET /
-```
-
-Returns API metadata and the list of available endpoints.
-
----
-
-### 2. Get All Students
-
-```http
-GET /students
-```
-
-Returns a list of all enrolled students.
-
-**Response (`200 OK`):**
-```json
-[
-  { "id": 1, "name": "Aarav Sharma", "age": 20, "course": "Computer Science" },
-  { "id": 2, "name": "Priya Patel", "age": 22, "course": "Information Technology" },
-  { "id": 3, "name": "Rohan Mehta", "age": 21, "course": "Software Engineering" },
-  { "id": 4, "name": "Ananya Iyer", "age": 19, "course": "Data Science" }
-]
-```
-
----
-
-### 3. Get Student by ID
-
-```http
-GET /students/:id
-```
-
-**Success Response (`200 OK`):**
+### 1. Root & Discovery
+- **`GET /`**
+  - **Description**: Returns API status, author, and overview of available endpoints.
+  - **Status Code**: `200 OK`
+  - **Response**:
 ```json
 {
-  "id": 1,
-  "name": "Aarav Sharma",
-  "age": 20,
-  "course": "Computer Science"
-}
-```
-
-**Error Response (`404 Not Found`):**
-```json
-{
-  "message": "Student not found"
+  "success": true,
+  "message": "Welcome to the Student Management REST API",
+  "author": "Chandra Prakash Mishra",
+  "endpoints": {
+    "getAllStudents": "GET /students",
+    "getStudentById": "GET /students/:id",
+    "createStudent": "POST /students",
+    "updateStudent": "PUT /students/:id",
+    "deleteStudent": "DELETE /students/:id"
+  }
 }
 ```
 
 ---
 
-### 4. Add Student
+### 2. Student CRUD Endpoints
 
-```http
-POST /students
-```
-
-**Example Request Body (`application/json`):**
+#### 1. Retrieve All Students
+- **Endpoint**: `GET /students`
+- **Optional Query**: `?course=Computer`
+- **Status Code**: `200 OK`
+- **Response**:
 ```json
 {
-  "name": "Rahul Verma",
-  "age": 20,
-  "course": "Computer Science"
+  "success": true,
+  "count": 4,
+  "data": [
+    {
+      "id": 1,
+      "name": "Aarav Sharma",
+      "age": 20,
+      "course": "Computer Science",
+      "email": "aarav.sharma@example.com"
+    },
+    {
+      "id": 2,
+      "name": "Priya Patel",
+      "age": 22,
+      "course": "Information Technology",
+      "email": "priya.patel@example.com"
+    }
+  ]
 }
 ```
 
-**Success Response (`201 Created`):**
+#### 2. Retrieve Student by ID
+- **Endpoint**: `GET /students/:id`
+- **Status Code**: `200 OK` or `404 Not Found`
+- **Response (`200 OK`)**:
 ```json
 {
-  "id": 5,
-  "name": "Rahul Verma",
-  "age": 20,
-  "course": "Computer Science"
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Aarav Sharma",
+    "age": 20,
+    "course": "Computer Science",
+    "email": "aarav.sharma@example.com"
+  }
+}
+```
+- **Response (`404 Not Found`)**:
+```json
+{
+  "success": false,
+  "message": "Student with ID 999 not found."
 }
 ```
 
-**Validation Error Response (`400 Bad Request`):**
+#### 3. Create a New Student
+- **Endpoint**: `POST /students`
+- **Headers**: `Content-Type: application/json`
+- **Body**:
 ```json
 {
-  "message": "Name, age, and course are required"
+  "name": "Lucas Scott",
+  "course": "Cybersecurity",
+  "age": 21,
+  "email": "lucas@example.com"
+}
+```
+- **Validation**: `name` and `course` are required non-empty string fields.
+- **Status Code**: `201 Created` or `400 Bad Request`
+- **Response (`201 Created`)**:
+```json
+{
+  "success": true,
+  "message": "Student registered successfully.",
+  "data": {
+    "id": 5,
+    "name": "Lucas Scott",
+    "course": "Cybersecurity",
+    "age": 21,
+    "email": "lucas@example.com"
+  }
+}
+```
+
+#### 4. Update an Existing Student
+- **Endpoint**: `PUT /students/:id`
+- **Headers**: `Content-Type: application/json`
+- **Body**:
+```json
+{
+  "course": "Network Security",
+  "age": 22
+}
+```
+- **Status Code**: `200 OK`, `400 Bad Request`, or `404 Not Found`
+- **Response (`200 OK`)**:
+```json
+{
+  "success": true,
+  "message": "Student with ID 1 updated successfully.",
+  "data": {
+    "id": 1,
+    "name": "Aarav Sharma",
+    "course": "Network Security",
+    "age": 22,
+    "email": "aarav.sharma@example.com"
+  }
+}
+```
+
+#### 5. Delete a Student
+- **Endpoint**: `DELETE /students/:id`
+- **Status Code**: `200 OK` or `404 Not Found`
+- **Response (`200 OK`)**:
+```json
+{
+  "success": true,
+  "message": "Student with ID 1 deleted successfully.",
+  "data": {
+    "id": 1,
+    "name": "Aarav Sharma",
+    "course": "Computer Science",
+    "age": 20,
+    "email": "aarav.sharma@example.com"
+  }
 }
 ```
 
 ---
 
-### 5. Update Student
+## Middlewares & Error Handling
 
-```http
-PUT /students/:id
-```
-
-**Example Request Body (`application/json`):**
-```json
-{
-  "course": "Software Engineering"
-}
-```
-
-**Success Response (`200 OK`):**
-```json
-{
-  "id": 1,
-  "name": "Aarav Sharma",
-  "age": 20,
-  "course": "Software Engineering"
-}
-```
-
-**Error Response (`404 Not Found`):**
-```json
-{
-  "message": "Student not found"
-}
-```
+1. **Custom Request Logger (`middleware/logger.js`)**:
+   Logs each request's timestamp (ISO format), HTTP method, and requested URL. Example:
+   ```text
+   [2026-09-27T14:40:08.863Z] GET /students
+   ```
+2. **404 Route Handling**:
+   Catches any requests to unregistered routes and returns:
+   ```json
+   {
+     "success": false,
+     "message": "Resource not found: GET /non-existent-endpoint"
+   }
+   ```
+3. **Global Error Handling (`middleware/errorHandler.js`)**:
+   Catches unexpected server errors and malformed JSON payloads gracefully, preventing unhandled server crashes.
 
 ---
 
-### 6. Delete Student
+## Automated Test Suite
 
-```http
-DELETE /students/:id
-```
-
-**Success Response (`200 OK`):**
-```json
-{
-  "message": "Student deleted successfully"
-}
-```
-
-**Error Response (`404 Not Found`):**
-```json
-{
-  "message": "Student not found"
-}
-```
-
----
-
-## Middleware
-
-The application utilizes two custom middleware components:
-
-- **Logger Middleware (`middleware/logger.js`)**  
-  Logs incoming HTTP requests including the HTTP method, requested route, and timestamp, simplifying API request monitoring and debugging during development.
-
-- **Global Error Handler (`middleware/errorHandler.js`)**  
-  Centralizes error handling by returning clean JSON responses with standard HTTP status codes. It detects malformed JSON payloads and returns a **400 Bad Request** error instead of terminating the server.
-
----
-
-## Testing
-
-The project includes an automated API test suite in `test_api.js` that tests all endpoints and status codes:
+Run the automated integration test suite:
 
 ```bash
 npm test
 ```
 
-or:
-
-```bash
-node test_api.js
-```
-
-### Automated Test Output:
+### Test Suite Execution Output:
 ```text
-Running API tests...
+=============================================================
+ 🧪 Running Student Management API Test Suite on port 60265
+=============================================================
 
-[2026-09-27T14:18:50.383Z] GET /
-✓ Root route
-[2026-09-27T14:18:50.388Z] GET /students
-✓ Get all students
-[2026-09-27T14:18:50.389Z] GET /students/1
-✓ Get student by ID
-[2026-09-27T14:18:50.390Z] GET /students/999
-✓ Invalid student returns 404
-[2026-09-27T14:18:50.398Z] POST /students
-✓ Create with missing fields
-[2026-09-27T14:18:50.400Z] POST /students
-✓ Create student
-[2026-09-27T14:18:50.402Z] PUT /students/5
-✓ Update student
-[2026-09-27T14:18:50.403Z] PUT /students/999
-✓ Update invalid student
-[2026-09-27T14:18:50.404Z] DELETE /students/5
-✓ Delete student
-[2026-09-27T14:18:50.406Z] DELETE /students/999
-✓ Delete invalid student
-[2026-09-27T14:18:50.408Z] GET /random-route
-✓ Unknown route
+[2026-09-27T14:40:08.859Z] GET /
+ ✓ PASS: GET / returns 200 OK and greeting
+[2026-09-27T14:40:08.863Z] GET /students
+ ✓ PASS: GET /students returns 200 and list of students
+[2026-09-27T14:40:08.865Z] GET /students/1
+ ✓ PASS: GET /students/1 returns 200 and student details
+[2026-09-27T14:40:08.867Z] GET /students/999
+ ✓ PASS: GET /students/999 returns 404 Not Found
+[2026-09-27T14:40:08.878Z] POST /students
+ ✓ PASS: POST /students without name/course returns 400 Bad Request
+[2026-09-27T14:40:08.879Z] POST /students
+ ✓ PASS: POST /students returns 201 Created and new student with unique ID
+[2026-09-27T14:40:08.880Z] PUT /students/5
+ ✓ PASS: PUT /students/:id returns 200 and updated fields
+[2026-09-27T14:40:08.882Z] PUT /students/999
+ ✓ PASS: PUT /students/999 returns 404 Not Found
+[2026-09-27T14:40:08.883Z] DELETE /students/5
+ ✓ PASS: DELETE /students/:id returns 200 and deleted student
+[2026-09-27T14:40:08.883Z] DELETE /students/999
+ ✓ PASS: DELETE /students/999 returns 404 Not Found
+[2026-09-27T14:40:08.884Z] GET /non-existent-endpoint
+ ✓ PASS: Unhandled route returns 404 Not Found
 
-----------------------------
-Passed : 11
-Failed : 0
-----------------------------
+=============================================================
+ Test Summary: 11 passed, 0 failed.
+=============================================================
 ```
-
----
-
-## Learning Outcomes
-
-- Express.js application setup and structure
-- REST API design principles
-- CRUD operations on in-memory collections
-- Modular routing with Express Router
-- Custom logging middleware implementation
-- Centralized error and 404 handling
-- Automated API endpoint testing using Node.js
