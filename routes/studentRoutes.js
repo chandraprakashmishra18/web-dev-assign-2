@@ -2,86 +2,222 @@ const express = require('express');
 const router = express.Router();
 let students = require('../data/students');
 
-// GET /students - Retrieve all students
+/**
+ * @route   GET /students
+ * @desc    Retrieve all students with optional course filter
+ * @access  Public
+ */
 router.get('/', (req, res) => {
-  res.status(200).json(students);
+  const { course } = req.query;
+
+  if (course) {
+    const filtered = students.filter(s =>
+      s.course.toLowerCase().includes(course.toLowerCase().trim())
+    );
+    return res.status(200).json({
+      success: true,
+      count: filtered.length,
+      data: filtered
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    count: students.length,
+    data: students
+  });
 });
 
-// GET /students/:id - Retrieve a student by ID
+/**
+ * @route   GET /students/:id
+ * @desc    Retrieve a single student by numeric ID
+ * @access  Public
+ */
 router.get('/:id', (req, res) => {
   const studentId = parseInt(req.params.id, 10);
+
+  if (isNaN(studentId)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid student ID format. ID must be an integer.'
+    });
+  }
+
   const student = students.find((s) => s.id === studentId);
 
   if (!student) {
-    return res.status(404).json({ message: 'Student not found' });
+    return res.status(404).json({
+      success: false,
+      message: `Student with ID ${studentId} not found.`
+    });
   }
 
-  res.status(200).json(student);
+  return res.status(200).json({
+    success: true,
+    data: student
+  });
 });
 
-// POST /students - Create a new student
+/**
+ * @route   POST /students
+ * @desc    Create a new student record
+ * @access  Public
+ */
 router.post('/', (req, res) => {
-  const { name, age, course } = req.body;
+  const { name, course, age, email } = req.body;
 
-  if (!name || !age || !course) {
-    return res.status(400).json({ message: 'Name, age, and course are required' });
+  // Validation: require name and course as non-empty strings
+  if (
+    !name ||
+    !course ||
+    typeof name !== 'string' ||
+    typeof course !== 'string' ||
+    name.trim() === '' ||
+    course.trim() === ''
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation failed. "name" and "course" are required non-empty string fields.'
+    });
   }
 
-  const numericAge = parseInt(age, 10);
-  if (isNaN(numericAge) || numericAge <= 0) {
-    return res.status(400).json({ message: 'Age must be a valid positive number' });
+  // Validate age if provided
+  if (age !== undefined) {
+    const numAge = Number(age);
+    if (isNaN(numAge) || numAge <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Field "age" must be a valid positive number.'
+      });
+    }
   }
+
+  // Generate unique auto-increment ID
+  const newId = students.length > 0 ? Math.max(...students.map((s) => s.id)) + 1 : 1;
 
   const newStudent = {
-    id: students.length > 0 ? Math.max(...students.map((s) => s.id)) + 1 : 1,
+    id: newId,
     name: name.trim(),
-    age: numericAge,
-    course: course.trim()
+    course: course.trim(),
+    ...(age !== undefined ? { age: Number(age) } : { age: 20 }),
+    ...(email && typeof email === 'string' ? { email: email.trim().toLowerCase() } : { email: `${name.trim().toLowerCase().replace(/\s+/g, '.')}@example.com` })
   };
 
   students.push(newStudent);
-  res.status(201).json(newStudent);
+
+  return res.status(201).json({
+    success: true,
+    message: 'Student registered successfully.',
+    data: newStudent
+  });
 });
 
-// PUT /students/:id - Update an existing student
+/**
+ * @route   PUT /students/:id
+ * @desc    Update an existing student record by ID
+ * @access  Public
+ */
 router.put('/:id', (req, res) => {
   const studentId = parseInt(req.params.id, 10);
-  const student = students.find((s) => s.id === studentId);
 
-  if (!student) {
-    return res.status(404).json({ message: 'Student not found' });
+  if (isNaN(studentId)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid student ID format. ID must be an integer.'
+    });
   }
 
-  const { name, age, course } = req.body;
+  const studentIndex = students.findIndex((s) => s.id === studentId);
 
-  if (!name && !age && !course) {
-    return res.status(400).json({ message: 'At least one field (name, age, course) is required to update' });
+  if (studentIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: `Student with ID ${studentId} not found.`
+    });
   }
 
-  if (name) student.name = name.trim();
-  if (age) {
-    const numericAge = parseInt(age, 10);
-    if (isNaN(numericAge) || numericAge <= 0) {
-      return res.status(400).json({ message: 'Age must be a valid positive number' });
+  const { name, course, age, email } = req.body;
+
+  if (name === undefined && course === undefined && age === undefined && email === undefined) {
+    return res.status(400).json({
+      success: false,
+      message: 'At least one field (name, course, age, email) is required for update.'
+    });
+  }
+
+  if (name !== undefined) {
+    if (typeof name !== 'string' || name.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: '"name" must be a non-empty string when provided.'
+      });
     }
-    student.age = numericAge;
+    students[studentIndex].name = name.trim();
   }
-  if (course) student.course = course.trim();
 
-  res.status(200).json(student);
+  if (course !== undefined) {
+    if (typeof course !== 'string' || course.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: '"course" must be a non-empty string when provided.'
+      });
+    }
+    students[studentIndex].course = course.trim();
+  }
+
+  if (age !== undefined) {
+    const numAge = Number(age);
+    if (isNaN(numAge) || numAge <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: '"age" must be a valid positive number.'
+      });
+    }
+    students[studentIndex].age = numAge;
+  }
+
+  if (email !== undefined) {
+    students[studentIndex].email = typeof email === 'string' ? email.trim() : email;
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: `Student with ID ${studentId} updated successfully.`,
+    data: students[studentIndex]
+  });
 });
 
-// DELETE /students/:id - Delete a student
+/**
+ * @route   DELETE /students/:id
+ * @desc    Remove a student record by ID
+ * @access  Public
+ */
 router.delete('/:id', (req, res) => {
   const studentId = parseInt(req.params.id, 10);
-  const index = students.findIndex((s) => s.id === studentId);
 
-  if (index === -1) {
-    return res.status(404).json({ message: 'Student not found' });
+  if (isNaN(studentId)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid student ID format. ID must be an integer.'
+    });
   }
 
-  students.splice(index, 1);
-  res.status(200).json({ message: 'Student deleted successfully' });
+  const studentIndex = students.findIndex((s) => s.id === studentId);
+
+  if (studentIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: `Student with ID ${studentId} not found.`
+    });
+  }
+
+  const [deletedStudent] = students.splice(studentIndex, 1);
+
+  return res.status(200).json({
+    success: true,
+    message: `Student with ID ${studentId} deleted successfully.`,
+    data: deletedStudent
+  });
 });
 
 module.exports = router;

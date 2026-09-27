@@ -1,35 +1,37 @@
 require('dotenv').config();
 const express = require('express');
-const studentRoutes = require('./routes/studentRoutes');
 const logger = require('./middleware/logger');
 const errorHandler = require('./middleware/errorHandler');
+const studentRoutes = require('./routes/studentRoutes');
 
+// Initialize Express application
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Built-in Middleware
+// Built-in body parser middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Custom Logger Middleware
+// Global request logger middleware
 app.use(logger);
 
-// Root route
+// Root route - API health and documentation overview
 app.get('/', (req, res) => {
   res.status(200).json({
-    message: 'Student Management REST API',
+    success: true,
+    message: 'Welcome to the Student Management REST API',
     author: 'Chandra Prakash Mishra',
-    availableRoutes: {
-      'GET /students': 'Retrieve all students',
-      'GET /students/:id': 'Retrieve a student by ID',
-      'POST /students': 'Create a new student',
-      'PUT /students/:id': 'Update an existing student',
-      'DELETE /students/:id': 'Delete a student'
+    endpoints: {
+      getAllStudents: 'GET /students',
+      getStudentById: 'GET /students/:id',
+      createStudent: 'POST /students',
+      updateStudent: 'PUT /students/:id',
+      deleteStudent: 'DELETE /students/:id'
     }
   });
 });
 
-// Mount student routes
+// Mount student CRUD routes under /students prefix
 app.use('/students', studentRoutes);
 
 // 404 Route Not Found handler
@@ -40,13 +42,16 @@ app.use((req, res, next) => {
   });
 });
 
-// Global Error Handler
+// Centralized error handling middleware
 app.use(errorHandler);
 
-// Start the server if launched directly
+// Start Express server if run directly
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`===============================================`);
+    console.log(`🚀 Student Management API running on port ${PORT}`);
+    console.log(`📡 Server URL: http://localhost:${PORT}`);
+    console.log(`===============================================`);
   });
 }
 
