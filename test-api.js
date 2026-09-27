@@ -3,17 +3,19 @@ const app = require('./app');
 
 // Automated Integration Test Runner
 async function runTests() {
-  const PORT = 3001;
-  const server = app.listen(PORT, async () => {
+  const server = http.createServer(app);
+
+  server.listen(0, async () => {
+    const port = server.address().port;
     console.log(`\n=============================================================`);
-    console.log(` 🧪 Running Student Management API Test Suite on port ${PORT}`);
+    console.log(` 🧪 Running Student Management API Test Suite on port ${port}`);
     console.log(`=============================================================\n`);
 
     const request = (path, method = 'GET', body = null, headers = {}) => {
       return new Promise((resolve, reject) => {
         const reqOptions = {
           hostname: '127.0.0.1',
-          port: PORT,
+          port: port,
           path,
           method,
           headers: {
