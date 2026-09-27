@@ -1,0 +1,24 @@
+{
+  "name": "student-management-api",
+  "version": "1.0.0",
+  "description": "A modular RESTful Student Management API built with Express.js and Node.js for Web Dev Lab Assignment 2",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js",
+    "test": "node tests/test-runner.js"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "rest-api",
+    "student-management",
+    "crud-api",
+    "mvc"
+  ],
+  "author": "Chandra Prakash Mishra",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
