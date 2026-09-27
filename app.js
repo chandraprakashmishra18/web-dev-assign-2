@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const studentRoutes = require('./routes/studentRoutes');
 const logger = require('./middleware/logger');
