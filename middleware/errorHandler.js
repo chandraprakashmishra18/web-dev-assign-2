@@ -1,15 +1,21 @@
-// Global error handler middleware
+/**
+ * Centralized Global Error Handling Middleware
+ */
 const errorHandler = (err, req, res, next) => {
-  console.error(`[Error] ${err.message}`);
+  console.error('[Error Details]:', err.stack || err.message);
 
-  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+  // Handle malformed JSON body payload errors
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(400).json({
-      message: "Invalid JSON format in request body"
+      success: false,
+      message: 'Invalid JSON payload provided in request body.'
     });
   }
 
-  res.status(err.status || 500).json({
-    message: err.message || "Internal Server Error"
+  const statusCode = err.status || err.statusCode || 500;
+  res.status(statusCode).json({
+    success: false,
+    message: err.message || 'Internal Server Error'
   });
 };
 

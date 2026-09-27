@@ -1,4 +1,7 @@
-// Custom logger middleware
+/**
+ * Custom Logger Middleware
+ * Logs incoming HTTP request method, URL, and timestamp.
+ */
 const logger = (req, res, next) => {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] ${req.method} ${req.originalUrl || req.url}`);
